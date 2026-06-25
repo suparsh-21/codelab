@@ -38,6 +38,15 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "CodeLab server is running!" });
 });
 
+// Serve static assets in production
+const path = require("path");
+app.use(express.static(path.join(__dirname, "client/dist")));
+
+// Fallback all other routes to React client index.html
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "client/dist", "index.html"));
+});
+
 // socket setup for running code
 setupSocket(io);
 
