@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+const defaultApiUrl = isLocalhost ? "http://localhost:5000/api" : "https://codelab-526i.vercel.app/api";
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_API_URL || defaultApiUrl,
 });
 
 // attach token to every request automatically
