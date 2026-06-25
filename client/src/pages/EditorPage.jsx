@@ -822,6 +822,22 @@ function EditorPage() {
     });
   }, [files]);
 
+  const getFileIcon = (filename) => {
+    const ext = filename.split(".").pop().toLowerCase();
+    let colorClass = "text-gray-400";
+    
+    switch (ext) {
+      case "js": return "text-amber-400";
+      case "ts": return "text-blue-400";
+      case "html": return "text-orange-500";
+      case "css": return "text-sky-400";
+      case "json": return "text-teal-400";
+      case "md": return "text-indigo-400";
+      case "py": return "text-emerald-400";
+      default: return "text-gray-400";
+    }
+  };
+
   const renderInputRow = (depth) => {
     return (
       <div 
@@ -829,7 +845,17 @@ function EditorPage() {
         className="flex items-center gap-2 py-1 pr-3"
         style={{ paddingLeft: `${depth * 12 + 14}px` }}
       >
-        <span className="text-[11px]">{creatingNode.type === "folder" ? "📁" : "📄"}</span>
+        <span className="shrink-0">
+          {creatingNode.type === "folder" ? (
+            <svg className="w-3.5 h-3.5 text-[#E2B808]/75" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+            </svg>
+          ) : (
+            <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          )}
+        </span>
         <form onSubmit={handleCreateNode} className="flex-1">
           <input
             type="text"
@@ -877,19 +903,46 @@ function EditorPage() {
               handleSelectFile(node.path);
             }
           }}
-          className={`editor-tree-node group flex items-center justify-between py-1.5 pr-3 cursor-pointer border-l-2 ${
+          className={`editor-tree-node group flex items-center justify-between py-1.5 pr-3 cursor-pointer border-l-2 hover-slide-right ${
             isActive 
-              ? "bg-[#E2B808]/8 text-white border-[#E2B808]" 
+              ? "active-tree-node text-white" 
               : "text-[#888] hover:text-white hover:bg-white/3 border-transparent"
           }`}
           style={{ paddingLeft: `${depth * 12 + 14}px` }}
         >
           <div className="flex items-center gap-2 truncate">
-            <span className="text-[10px] text-[#444] font-bold">
-              {isFolder ? (isCollapsed ? "▶" : "▼") : ""}
-            </span>
-            <span className="text-[11px]">
-              {isFolder ? (isCollapsed ? "📁" : "📂") : "📄"}
+            {isFolder ? (
+              <span className="w-2.5 h-2.5 flex items-center justify-center shrink-0">
+                {isCollapsed ? (
+                  <svg className="w-2 h-2 text-[#555] group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                ) : (
+                  <svg className="w-2.5 h-2.5 text-[#888] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                )}
+              </span>
+            ) : (
+              <span className="w-2.5 shrink-0" />
+            )}
+            
+            <span className="shrink-0 flex items-center justify-center">
+              {isFolder ? (
+                isCollapsed ? (
+                  <svg className="w-3.5 h-3.5 text-[#E2B808]/80 group-hover:text-[#E2B808] transition-colors" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                  </svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5 text-[#E2B808]" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v2H2V6zm0 6h16v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2z" clipRule="evenodd" />
+                  </svg>
+                )
+              ) : (
+                <svg className={`w-3.5 h-3.5 ${getFileIcon(node.name)}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              )}
             </span>
             <span className="truncate mono text-[11px] tracking-tight">{node.name}</span>
           </div>
@@ -966,13 +1019,13 @@ function EditorPage() {
   return (
     <div className={`editor-shell h-screen flex flex-col theme-${editorTheme}`}>
       {/* toolbar */}
-      <div className="editor-toolbar relative flex items-center justify-between gap-3 px-4 py-2.5 border-b border-white/[0.07] z-10">
+      <div className="editor-toolbar glass-header relative flex items-center justify-between gap-3 px-4 py-2.5 z-10">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/dashboard")}
-            className="btn-secondary btn-compact flex items-center gap-1.5 text-[10px] mono uppercase tracking-wider font-semibold"
+            className="btn-capsule-secondary"
           >
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
             Back
@@ -993,18 +1046,18 @@ function EditorPage() {
           <div className="save-indicator flex items-center gap-1.5 ml-2">
             {saving ? (
               <>
-                <div className="spinner" style={{ width: 10, height: 10 }}></div>
-                <span className="text-[10px] text-[#555] mono uppercase tracking-wider">saving</span>
+                <div className="spinner w-2.5 h-2.5" style={{ borderWidth: "1.5px", borderTopColor: "#E2B808" }}></div>
+                <span className="text-[10px] text-[#E2B808] mono uppercase tracking-wider font-semibold">saving</span>
               </>
             ) : saved ? (
               <>
-                <div className="status-dot"></div>
-                <span className="text-[10px] text-[#555] mono uppercase tracking-wider">saved</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-green"></div>
+                <span className="text-[10px] text-emerald-500/80 mono uppercase tracking-wider font-semibold">saved</span>
               </>
             ) : (
               <>
-                <div className="w-1.5 h-1.5 rounded-full bg-[#E2B808]"></div>
-                <span className="text-[10px] text-[#555] mono uppercase tracking-wider">unsaved</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#E2B808] animate-pulse-glow"></div>
+                <span className="text-[10px] text-[#E2B808]/80 mono uppercase tracking-wider font-semibold">unsaved</span>
               </>
             )}
           </div>
@@ -1014,52 +1067,64 @@ function EditorPage() {
           {canPreview && (
             <button
               onClick={() => setShowPreview(!showPreview)}
-              className={`btn-compact flex items-center gap-1.5 text-[10px] mono uppercase tracking-wider border cursor-pointer ${
+              className={`btn-capsule-secondary cursor-pointer ${
                 showPreview
-                  ? "border-[#E2B808]/30 bg-[#E2B808]/8 text-[#E2B808] hover:bg-[#E2B808]/12"
-                  : "border-white/5 bg-transparent text-[#6e7469] hover:text-white hover:border-white/12"
+                  ? "border-[#E2B808]/40 bg-[#E2B808]/10 text-[#E2B808] hover:bg-[#E2B808]/15"
+                  : ""
               }`}
             >
-              <span className={`w-1.5 h-1.5 rounded-full transition-all ${showPreview ? "bg-[#E2B808] shadow-[0_0_8px_#E2B808]" : "bg-[#444]"}`} />
+              <span className={`w-1.5 h-1.5 rounded-full transition-all ${showPreview ? "bg-[#E2B808] animate-pulse-glow" : "bg-[#444]"}`} />
               Preview
             </button>
           )}
 
-          <button onClick={handleSave} className="btn-secondary btn-compact flex items-center gap-1.5 text-[10px] mono uppercase tracking-wider font-semibold">
+          <button onClick={handleSave} className="btn-capsule-secondary">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
             Save
           </button>
 
-          <button onClick={handleDownloadZip} className="btn-secondary btn-compact flex items-center gap-1.5 text-[10px] mono uppercase tracking-wider font-semibold" title="Download workspace as ZIP">
+          <button onClick={handleDownloadZip} className="btn-capsule-secondary" title="Download workspace as ZIP">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
             ZIP
           </button>
 
-          <button onClick={() => setShowReportModal(true)} className="btn-secondary btn-compact flex items-center gap-1.5 text-[10px] mono uppercase tracking-wider font-semibold" title="Export Source Code & Logs">
+          <button onClick={() => setShowReportModal(true)} className="btn-capsule-secondary" title="Export Source Code & Logs">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
             Report
           </button>
 
-          <button onClick={toggleTheme} className="btn-secondary btn-compact flex items-center gap-1.5 text-[10px] mono uppercase tracking-wider font-semibold" title="Toggle Editor Theme">
-            {editorTheme === "dark" && "🌙 Dark"}
-            {editorTheme === "semidark" && "🌓 Semi-Dark"}
-            {editorTheme === "light" && "☀️ Light"}
+          <button onClick={toggleTheme} className="btn-capsule-secondary" title="Toggle Editor Theme">
+            <span className="text-[11px]">
+              {editorTheme === "dark" && "🌙"}
+              {editorTheme === "semidark" && "🌓"}
+              {editorTheme === "light" && "☀️"}
+            </span>
+            <span className="text-[9px] mono opacity-80">{editorTheme}</span>
           </button>
 
           {activeFile && (
             <button
               onClick={handleRun}
               disabled={isRunning}
-              className="btn-primary btn-compact flex items-center gap-1.5 text-[10px] mono uppercase tracking-wider font-semibold"
+              className="btn-capsule-primary"
             >
               {isRunning ? (
                 <>
-                  <span className="spinner" style={{ width: 9, height: 9, borderTopColor: "#17170e", borderWidth: "1.5px" }} />
-                  running
+                  <span className="spinner w-3.5 h-3.5" style={{ borderTopColor: "#070806", borderWidth: "1.5px" }} />
+                  Running
                 </>
               ) : (
                 <>
-                  <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
-                  run
+                  Run
                 </>
               )}
             </button>
@@ -1070,7 +1135,7 @@ function EditorPage() {
       {/* main area */}
       <div className="flex-1 flex overflow-hidden">
         {/* sidebar file explorer */}
-        <div className="editor-sidebar w-60 border-r border-white/[0.07] flex flex-col select-none">
+        <div className="editor-sidebar glass-sidebar w-60 flex flex-col select-none">
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-white/[0.01]">
             <span className="text-[10px] font-bold text-[#666] mono uppercase tracking-widest">Workspace</span>
             <div className="flex items-center gap-2">
@@ -1139,30 +1204,30 @@ function EditorPage() {
 
               {/* terminal output panel */}
               <div
-                className="terminal-panel terminal-glow border-t border-white/[0.07]"
+                className="terminal-panel border-t border-white/[0.04]"
                 style={{ height: terminalHeight, minHeight: 80 }}
               >
-                <div className="flex items-center justify-between px-4 py-1.5 bg-black/50 border-b border-white/3">
+                <div className="flex items-center justify-between px-4 py-1.5 console-header-glass border-b border-white/[0.03]">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-medium text-[#888] mono uppercase tracking-wider">terminal</span>
-                    <span className="text-[10px] text-[#444] mono bg-white/3 px-1.5 py-0.25 rounded">{output.length}</span>
+                    <span className="text-[11px] font-medium text-[#8a8f83] mono uppercase tracking-wider">terminal</span>
+                    <span className="text-[10px] text-[#5e6359] mono bg-white/3 px-1.5 py-0.25 rounded">{output.length}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowStdin(!showStdin)}
-                      className={`terminal-btn text-[10px] mono uppercase ${showStdin ? "text-[#E2B808] border-[#E2B808]/40 bg-[#E2B808]/5" : ""}`}
+                      className={`console-btn-pill mono uppercase ${showStdin ? "text-[#E2B808] border-[#E2B808]/40 bg-[#E2B808]/5" : ""}`}
                     >
                       Stdin / Input
                     </button>
                     <button
                       onClick={() => setTerminalHeight(terminalHeight === 200 ? 350 : 200)}
-                      className="terminal-btn text-[10px] mono uppercase"
+                      className="console-btn-pill mono uppercase"
                     >
                       {terminalHeight === 200 ? "expand" : "collapse"}
                     </button>
                     <button
                       onClick={clearTerminal}
-                      className="terminal-btn text-[10px] mono uppercase"
+                      className="console-btn-pill mono uppercase"
                     >
                       clear
                     </button>
