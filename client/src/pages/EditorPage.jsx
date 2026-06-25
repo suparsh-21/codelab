@@ -143,9 +143,49 @@ function EditorPage() {
       }
     });
 
-    // Register HTML boilerplate completion provider
+    // Register HTML completion provider for tags and boilerplate
     if (!htmlSnippetProviderRegistered) {
       htmlSnippetProviderRegistered = true;
+
+      const htmlTags = [
+        { label: "div", insertText: "<div>$0</div>", docs: "Division element" },
+        { label: "span", insertText: "<span>$0</span>", docs: "Inline span element" },
+        { label: "p", insertText: "<p>$0</p>", docs: "Paragraph element" },
+        { label: "a", insertText: "<a href=\"${1:#}\">$0</a>", docs: "Anchor link element" },
+        { label: "h1", insertText: "<h1>$0</h1>", docs: "Heading 1" },
+        { label: "h2", insertText: "<h2>$0</h2>", docs: "Heading 2" },
+        { label: "h3", insertText: "<h3>$0</h3>", docs: "Heading 3" },
+        { label: "h4", insertText: "<h4>$0</h4>", docs: "Heading 4" },
+        { label: "h5", insertText: "<h5>$0</h5>", docs: "Heading 5" },
+        { label: "h6", insertText: "<h6>$0</h6>", docs: "Heading 6" },
+        { label: "img", insertText: "<img src=\"$1\" alt=\"$2\" />$0", docs: "Image element" },
+        { label: "button", insertText: "<button type=\"${1:button}\">$0</button>", docs: "Button element" },
+        { label: "input", insertText: "<input type=\"${1:text}\" name=\"$2\" placeholder=\"$3\" />$0", docs: "Input element" },
+        { label: "textarea", insertText: "<textarea name=\"$1\" rows=\"${2:4}\" cols=\"${3:50}\">$0</textarea>", docs: "Textarea input" },
+        { label: "form", insertText: "<form action=\"$1\" method=\"${2:POST}\">\n\t$0\n</form>", docs: "Form container" },
+        { label: "select", insertText: "<select name=\"$1\">\n\t<option value=\"$2\">$3</option>\n\t$0\n</select>", docs: "Dropdown select" },
+        { label: "label", insertText: "<label for=\"$1\">$0</label>", docs: "Form input label" },
+        { label: "ul", insertText: "<ul>\n\t<li>$0</li>\n</ul>", docs: "Unordered list" },
+        { label: "ol", insertText: "<ol>\n\t<li>$0</li>\n</ol>", docs: "Ordered list" },
+        { label: "li", insertText: "<li>$0</li>", docs: "List item" },
+        { label: "table", insertText: "<table>\n\t<thead>\n\t\t<tr>\n\t\t\t<th>$1</th>\n\t\t</tr>\n\t</thead>\n\t<tbody>\n\t\t<tr>\n\t\t\t<td>$0</td>\n\t\t</tr>\n\t</tbody>\n</table>", docs: "Table element" },
+        { label: "tr", insertText: "<tr>\n\t<td>$0</td>\n</tr>", docs: "Table row" },
+        { label: "th", insertText: "<th>$0</th>", docs: "Table header cell" },
+        { label: "td", insertText: "<td>$0</td>", docs: "Table data cell" },
+        { label: "script", insertText: "<script src=\"$1\"></script>$0", docs: "JavaScript reference" },
+        { label: "link", insertText: "<link rel=\"stylesheet\" href=\"$1\" />$0", docs: "CSS stylesheet link" },
+        { label: "meta", insertText: "<meta charset=\"UTF-8\" />$0", docs: "Metadata element" },
+        { label: "section", insertText: "<section>\n\t$0\n</section>", docs: "Generic section element" },
+        { label: "header", insertText: "<header>\n\t$0\n</header>", docs: "Header container" },
+        { label: "footer", insertText: "<footer>\n\t$0\n</footer>", docs: "Footer container" },
+        { label: "nav", insertText: "<nav>\n\t$0\n</nav>", docs: "Navigation container" },
+        { label: "main", insertText: "<main>\n\t$0\n</main>", docs: "Main content element" },
+        { label: "br", insertText: "<br />$0", docs: "Line break" },
+        { label: "hr", insertText: "<hr />$0", docs: "Horizontal rule" },
+        { label: "style", insertText: "<style>\n\t$0\n</style>", docs: "Inline style tag" },
+        { label: "iframe", insertText: "<iframe src=\"$1\" frameborder=\"0\">$0</iframe>", docs: "Embedded frame" }
+      ];
+
       monaco.languages.registerCompletionItemProvider("html", {
         triggerCharacters: ["!"],
         provideCompletionItems: (model, position) => {
@@ -156,7 +196,7 @@ function EditorPage() {
             endColumn: position.column,
           });
 
-          // Match if the line contains only optional whitespace and '!'
+          // 1. Check if the line is exactly '!' to offer HTML5 Boilerplate
           const match = textUntilPosition.match(/^\s*(!)$/);
           if (match) {
             const startColumn = textUntilPosition.indexOf("!") + 1;
@@ -191,7 +231,34 @@ function EditorPage() {
               ],
             };
           }
-          return { suggestions: [] };
+
+          // 2. Check if cursor is inside an unclosed HTML tag attributes list (e.g. "<div c...")
+          const lastLessThan = textUntilPosition.lastIndexOf("<");
+          const lastGreaterThan = textUntilPosition.lastIndexOf(">");
+          if (lastLessThan > lastGreaterThan) {
+            return { suggestions: [] };
+          }
+
+          // 3. Offer tag abbreviation snippets
+          const word = model.getWordUntilPosition(position);
+          const range = {
+            startLineNumber: position.lineNumber,
+            endLineNumber: position.lineNumber,
+            startColumn: word.startColumn,
+            endColumn: word.endColumn,
+          };
+
+          const suggestions = htmlTags.map((tag) => ({
+            label: tag.label,
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            documentation: tag.docs,
+            detail: "HTML Tag Snippet",
+            insertText: tag.insertText,
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            range: range,
+          }));
+
+          return { suggestions };
         },
       });
     }
