@@ -51,6 +51,9 @@ const languageLabels = {
   xml: "XML", yaml: "YAML", sql: "SQL", graphql: "GraphQL",
 };
 
+// Track global registration of the HTML snippet provider to avoid duplicates
+let htmlSnippetProviderRegistered = false;
+
 function EditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -139,6 +142,59 @@ function EditorPage() {
         "editor.lineHighlightBackground": "#f4f5f0",
       }
     });
+
+    // Register HTML boilerplate completion provider
+    if (!htmlSnippetProviderRegistered) {
+      htmlSnippetProviderRegistered = true;
+      monaco.languages.registerCompletionItemProvider("html", {
+        triggerCharacters: ["!"],
+        provideCompletionItems: (model, position) => {
+          const textUntilPosition = model.getValueInRange({
+            startLineNumber: position.lineNumber,
+            startColumn: 1,
+            endLineNumber: position.lineNumber,
+            endColumn: position.column,
+          });
+
+          // Match if the line contains only optional whitespace and '!'
+          const match = textUntilPosition.match(/^\s*(!)$/);
+          if (match) {
+            const startColumn = textUntilPosition.indexOf("!") + 1;
+            return {
+              suggestions: [
+                {
+                  label: "!",
+                  kind: monaco.languages.CompletionItemKind.Snippet,
+                  documentation: "HTML5 Boilerplate",
+                  detail: "HTML5 Boilerplate",
+                  insertText: [
+                    "<!DOCTYPE html>",
+                    "<html lang=\"en\">",
+                    "<head>",
+                    "    <meta charset=\"UTF-8\">",
+                    "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">",
+                    "    <title>${1:Document}</title>",
+                    "</head>",
+                    "<body>",
+                    "    $0",
+                    "</body>",
+                    "</html>"
+                  ].join("\n"),
+                  insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                  range: {
+                    startLineNumber: position.lineNumber,
+                    startColumn: startColumn,
+                    endLineNumber: position.lineNumber,
+                    endColumn: position.column,
+                  },
+                },
+              ],
+            };
+          }
+          return { suggestions: [] };
+        },
+      });
+    }
   };
 
   // File explorer states
